@@ -1,0 +1,231 @@
+package rules
+dialect "java"
+import com.alibaba.fastjson.JSON
+import com.medcaptain.parsedata.entity.mongodb.EventLog
+import com.medcaptain.parsedata.entity.mongodb.PropertyLog
+import org.springframework.data.mongodb.core.MongoTemplate
+import com.alibaba.fastjson.JSONObject
+import java.util.List
+import org.slf4j.Logger
+import java.util.Map
+import java.util.HashMap
+import java.util.Iterator;
+import com.medcaptain.parsedata.service.impl.*
+import com.medcaptain.parsedata.mapper.*
+import java.util.ArrayList
+import java.util.Date
+import com.alibaba.fastjson.JSONArray
+import jdk.nashorn.internal.scripts.JS
+global MongoTemplate mongoTemplate
+global Logger log
+global DeviceinfoMapper deviceinfoMapper
+
+
+
+rule "PatientInfo"
+ when
+    $event:EventLog(logContent.getJSONObject("params").get("identifier")=="PatientInfo")
+    EventLog(logContent.get("version")=="1.0.0")
+    exists EventLog($event.getLogContent().getJSONObject("params").getJSONObject("outputData").get("Id")!=null)
+    then
+    Integer Id = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id");
+    String productKey = $event.getProductKey();
+    String deviceName = $event.getDeviceName();
+    String organizationId = $event.getOrganizationId();
+    String departmentId = $event.getDepartmentId();
+    org.springframework.data.mongodb.core.query.Criteria criteria = org.springframework.data.mongodb.core.query.Criteria
+    .where("productKey").is($event.getProductKey())
+    .and("deviceName").is($event.getDeviceName())
+    .and("Id").is($event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id"));
+    org.springframework.data.mongodb.core.query.Query query =  new org.springframework.data.mongodb.core.query.Query(criteria);
+    JSONObject json1 = new JSONObject();
+    JSONObject resultEvent = mongoTemplate.findOne(query,JSONObject.class,"IVD70_ResultEvents");
+    JSONObject json2 = new JSONObject();
+    json2.put("PatientInfo",$event.getLogContent().getJSONObject("params").getJSONObject("outputData"));
+    json2.put("SampleResult",new JSONArray());
+    json2.put("SampleInfo",new JSONObject());
+    System.out.println(json1.toString());
+    System.out.println(resultEvent);
+    if (null==resultEvent) {
+        json1.fluentPut("data",json2);
+        json1.fluentPut("Id",Id);
+        json1.fluentPut("productKey",productKey);
+        json1.fluentPut("deviceName",deviceName);
+        json1.fluentPut("organizationId",organizationId);
+        json1.fluentPut("departmentId",departmentId);
+        json1.fluentPut("version",$event.getLogContent().get("version").toString());
+        json1.fluentPut("create_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("update_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("create_time",System.currentTimeMillis());
+        json1.fluentPut("update_time",System.currentTimeMillis());
+        mongoTemplate.save(json1,"IVD70_ResultEvents");
+        log.info("成功插入MD70PatientInfo");
+    }else {
+        org.springframework.data.mongodb.core.query.Update Update = new org.springframework.data.mongodb.core.query.Update()
+        .set("data.PatientInfo",$event.getLogContent().getJSONObject("params").getJSONObject("outputData"))
+        .set("update_time",System.currentTimeMillis())
+        .set("update_timestamp",$event.getLogContent().getLong("timestamp"));
+        mongoTemplate.updateFirst(query,Update,JSONObject.class,"IVD70_ResultEvents");
+        log.info("成功更新MD70PatientInfo");
+    }
+end
+
+rule "SampleInfo"
+ when
+    $event:EventLog(logContent.getJSONObject("params").get("identifier")=="SampleInfo")
+    EventLog(logContent.get("version")=="1.0.0")
+    exists EventLog($event.getLogContent().getJSONObject("params").getJSONObject("outputData").get("Id")!=null)
+    then
+    Integer Id = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id");
+    String productKey = $event.getProductKey();
+    String deviceName = $event.getDeviceName();
+    String organizationId = $event.getOrganizationId();
+    String departmentId = $event.getDepartmentId();
+    org.springframework.data.mongodb.core.query.Criteria criteria = org.springframework.data.mongodb.core.query.Criteria
+    .where("productKey").is($event.getProductKey())
+    .and("deviceName").is($event.getDeviceName())
+    .and("Id").is($event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id"));
+    org.springframework.data.mongodb.core.query.Query query =  new org.springframework.data.mongodb.core.query.Query(criteria);
+    JSONObject json1 = new JSONObject();
+    JSONObject resultEvent = mongoTemplate.findOne(query,JSONObject.class,"IVD70_ResultEvents");
+    JSONObject json2 = new JSONObject();
+    json2.put("SampleInfo",$event.getLogContent().getJSONObject("params").getJSONObject("outputData"));
+    json2.put("SampleResult",new JSONArray());
+    json2.put("PatientInfo",new JSONObject());
+    System.out.println(json1.toString());
+    System.out.println(resultEvent);
+    if (null==resultEvent) {
+        json1.fluentPut("data",json2);
+        json1.fluentPut("Id",Id);
+        json1.fluentPut("productKey",productKey);
+        json1.fluentPut("deviceName",deviceName);
+        json1.fluentPut("organizationId",organizationId);
+        json1.fluentPut("departmentId",departmentId);
+        json1.fluentPut("version",$event.getLogContent().get("version").toString());
+        json1.fluentPut("create_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("update_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("create_time",System.currentTimeMillis());
+        json1.fluentPut("update_time",System.currentTimeMillis());
+        mongoTemplate.save(json1,"IVD70_ResultEvents");
+        log.info("成功插入MD70SampleInfo");
+    }else {
+        org.springframework.data.mongodb.core.query.Update Update = new org.springframework.data.mongodb.core.query.Update()
+        .set("data.SampleInfo",$event.getLogContent().getJSONObject("params").getJSONObject("outputData"))
+        .set("update_time",System.currentTimeMillis())
+        .set("update_timestamp",$event.getLogContent().getLong("timestamp"));
+        mongoTemplate.updateFirst(query,Update,JSONObject.class,"IVD70_ResultEvents");
+        log.info("成功更新MD70SampleInfo");
+    }
+end
+
+rule "SampleResult"
+ when
+    $event:EventLog(logContent.getJSONObject("params").get("identifier")=="SampleResult")
+    EventLog(logContent.get("version")=="1.0.0")
+    exists EventLog($event.getLogContent().getJSONObject("params").getJSONObject("outputData").get("Id")!=null)
+    then
+    Integer Id = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id");
+    String productKey = $event.getProductKey();
+    String deviceName = $event.getDeviceName();
+    String organizationId = $event.getOrganizationId();
+    String departmentId = $event.getDepartmentId();
+    org.springframework.data.mongodb.core.query.Criteria criteria = org.springframework.data.mongodb.core.query.Criteria
+    .where("productKey").is($event.getProductKey())
+    .and("deviceName").is($event.getDeviceName())
+    .and("Id").is($event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("Id"));
+    org.springframework.data.mongodb.core.query.Query query =  new org.springframework.data.mongodb.core.query.Query(criteria);
+    JSONObject json1 = new JSONObject();
+    JSONObject resultEvent = mongoTemplate.findOne(query,JSONObject.class,"IVD70_ResultEvents");
+    JSONObject json2 = new JSONObject();
+    JSONArray json3 = new JSONArray();
+    json3.add($event.getLogContent().getJSONObject("params").getJSONObject("outputData"));
+    json2.put("SampleResult",json3);
+    System.out.println(json1.toString());
+    System.out.println(resultEvent);
+    if (null==resultEvent) {
+        json1.fluentPut("data",json2);
+        json1.fluentPut("Id",Id);
+        json1.fluentPut("productKey",productKey);
+        json1.fluentPut("deviceName",deviceName);
+        json1.fluentPut("organizationId",organizationId);
+        json1.fluentPut("departmentId",departmentId);
+        json1.fluentPut("version",$event.getLogContent().get("version").toString());
+        json1.fluentPut("create_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("update_timestamp",$event.getLogContent().getLong("timestamp"));
+        json1.fluentPut("create_time",System.currentTimeMillis());
+        json1.fluentPut("update_time",System.currentTimeMillis());
+        mongoTemplate.save(json1,"IVD70_ResultEvents");
+        log.info("成功插入MD70SampleResult新项目");
+    }else {
+        String resultId = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getString("ResultId");
+        JSONArray sampleResultEvent = resultEvent.getJSONObject("data").getJSONArray("SampleResult");
+        System.out.println(sampleResultEvent);
+        if (null==sampleResultEvent) {
+         org.springframework.data.mongodb.core.query.Update Update2= new org.springframework.data.mongodb.core.query.Update()
+         .set("data.SampleResult",json3)
+         .set("update_time",System.currentTimeMillis())
+         .set("update_timestamp",$event.getLogContent().getLong("timestamp"));
+         mongoTemplate.updateFirst(query,Update2,JSONObject.class,"IVD70_ResultEvents");
+         log.info("成功新增MD70SampleResult项目");
+        }else{
+        List resultIdList = new ArrayList<>();
+        for (Object sampleResult : sampleResultEvent ) {
+          resultIdList.add(JSONObject.parseObject(sampleResult.toString()).getString("ResultId"));
+        }
+        System.out.println(resultIdList);
+        Boolean flag = resultIdList.contains(resultId);
+        if (false == flag) {
+            sampleResultEvent.fluentAdd($event.getLogContent().getJSONObject("params").getJSONObject("outputData"));
+            org.springframework.data.mongodb.core.query.Update Update1 = new org.springframework.data.mongodb.core.query.Update()
+            .set("data.SampleResult",sampleResultEvent)
+            .set("update_time",System.currentTimeMillis())
+            .set("update_timestamp",$event.getLogContent().getLong("timestamp"));
+            mongoTemplate.updateFirst(query,Update1,JSONArray.class,"IVD70_ResultEvents");
+             log.info("成功新增MD70SampleResult项目");
+        }else{
+             for (Object sample : sampleResultEvent ) {
+                if (JSONObject.parseObject(sample.toString()).getString("ResultId").equals(resultId)) {
+                    sampleResultEvent.fluentRemove(sample);
+                    System.out.println(sampleResultEvent);
+                    sampleResultEvent.fluentAdd($event.getLogContent().getJSONObject("params").getJSONObject("outputData"));
+                    break;
+                }
+             }
+             System.out.println(sampleResultEvent);
+             org.springframework.data.mongodb.core.query.Update Update = new org.springframework.data.mongodb.core.query.Update()
+             .set("data.SampleResult",sampleResultEvent)
+             .set("update_time",System.currentTimeMillis())
+             .set("update_timestamp",$event.getLogContent().getLong("timestamp"));
+             mongoTemplate.updateFirst(query,Update,JSONArray.class,"IVD70_ResultEvents");
+             log.info("成功更新MD70SampleResult");
+        }
+       }
+    }
+end
+
+rule "ReagentInfo"
+ when
+    $event:EventLog(logContent.getJSONObject("params").get("identifier")=="ReagentInfo")
+    EventLog(logContent.get("version")=="1.0.0")
+    then
+    String productKey = $event.getProductKey();
+    String deviceName = $event.getDeviceName();
+    String batchNo = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getString("BatchNo");
+    Long caEffectiveDate = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getLong("CaEffectiveDate");
+    Integer caState = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getInteger("CaState");
+    Long caTime = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getLong("CaTime");
+    String reagentName = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getString("ReagentName");
+    Long regentExpiryDate = $event.getLogContent().getJSONObject("params").getJSONObject("outputData").getLong("RegentExpiryDate");
+    org.springframework.data.mongodb.core.query.Criteria criteria = org.springframework.data.mongodb.core.query.Criteria
+    .where("log_content.params.outputData.BatchNo").is(batchNo)
+    .and("log_content.params.outputData.CaEffectiveDate").is(caEffectiveDate)
+    .and("log_content.params.outputData.CaTime").is(caTime)
+    .and("log_content.params.outputData.ReagentName").is(reagentName)
+    .and("log_content.params.outputData.RegentExpiryDate").is(regentExpiryDate)
+    .and("log_content.params.outputData.CaState").is(caState)
+    .and("product_key").is(productKey)
+    .and("device_name").is(deviceName);
+    org.springframework.data.mongodb.core.query.Query query =  new org.springframework.data.mongodb.core.query.Query(criteria);
+    mongoTemplate.findAllAndRemove(query,"event_log");
+    log.info("成功更新MD70ReagentInfo");
+end
