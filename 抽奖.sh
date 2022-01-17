@@ -16,4 +16,4 @@ do
 
 done 
 
-echo "快来领奖"	
+echo "快来领奖啦"	
